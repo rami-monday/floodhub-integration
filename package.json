@@ -1,0 +1,31 @@
+{
+  "name": "flood-forecasting",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "ts-node index.ts",
+    "dev": "nodemon --exec ts-node --files index.ts",
+    "gcp-build": "cd client && yarn build && cd .."
+  },
+  "devDependencies": {
+    "@types/cls-hooked": "^4.3.8",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node": "^20.11.20",
+    "nodemon": "^3.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@mondaycom/apps-sdk": "^2.2.0",
+    "axios": "^1.6.7",
+    "cls-hooked": "^4.2.2",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.2",
+    "graphql": "^16.8.1",
+    "graphql-request": "^6.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "monday-sdk-js": "^0.5.4"
+  }
+}
