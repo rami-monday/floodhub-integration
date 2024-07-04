@@ -20,7 +20,8 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build:client": "react-scripts build",
+    "gcp-build": "npm run build:client",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

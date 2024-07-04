@@ -7,6 +7,7 @@ import MondayClient from "../../../services/clients/monday.client";
 import MondayItemLock from "../../../services/storage/monday-items-lock";
 import { getUTCDate } from "../../../services/utils/date";
 import { SUPPORTED_COUNTRIES } from "../../../constants/google.const";
+import { splitArrays } from "../../../services/utils/arrays";
 
 const logger = new MondayLogger("flood-forecasting-actions-controller");
 
@@ -51,60 +52,81 @@ export const pollingCountry = async (req: MondayRequest, res: Response) => {
       )
   );
 
-  const items = await Promise.all(
-    forecastsWithoutLock.map((forecast) => {
-      const countryName = SUPPORTED_COUNTRIES.find(
-        (c) => c.value === country.value
-      )?.title;
-      const itemName = `${forecast.riverName}, ${countryName} - ${forecast.gaugeId} `;
+  const batches = splitArrays(forecastsWithoutLock, 20);
+  const newLocks: {
+    startTime: string;
+    endTime: string;
+    gaugeId: string;
+  }[] = [];
 
-      const columnValues: Record<string, any> = {};
+  try {
+    for (const batch of batches) {
+      await Promise.all(
+        batch.map(async (forecast) => {
+          const countryName = SUPPORTED_COUNTRIES.find(
+            (c) => c.value === country.value
+          )?.title;
+          const itemName = `${forecast.riverName}, ${countryName} - ${forecast.gaugeId} `;
 
-      if (alertValueColumn)
-        columnValues[alertValueColumn] = `${forecast.value} ${forecast.unit}`;
+          const columnValues: Record<string, any> = {};
 
-      if (floodHubUrlColumn)
-        columnValues[floodHubUrlColumn] = {
-          url: forecast.floodHubUrl,
-          text: "go to floodhub!",
-        };
+          if (alertValueColumn)
+            columnValues[
+              alertValueColumn
+            ] = `${forecast.value} ${forecast.unit}`;
 
-      if (startTimeColumn)
-        columnValues[startTimeColumn] = getUTCDate(forecast.forecastStartTime);
+          if (floodHubUrlColumn)
+            columnValues[floodHubUrlColumn] = {
+              url: forecast.floodHubUrl,
+              text: "go to floodhub!",
+            };
 
-      if (endTimeColumn)
-        columnValues[endTimeColumn] = getUTCDate(forecast.forecastEndTime);
+          if (startTimeColumn)
+            columnValues[startTimeColumn] = getUTCDate(
+              forecast.forecastStartTime
+            );
 
-      if (riverNameColumn) columnValues[riverNameColumn] = forecast.riverName;
+          if (endTimeColumn)
+            columnValues[endTimeColumn] = getUTCDate(forecast.forecastEndTime);
 
-      if (dangerLevelColumn)
-        columnValues[dangerLevelColumn] = forecast.dangerLevel;
+          if (riverNameColumn)
+            columnValues[riverNameColumn] = forecast.riverName;
 
-      if (locationColumn)
-        columnValues[locationColumn] = {
-          lat: forecast.location.latitude,
-          lng: forecast.location.longitude,
-          address: `${forecast.riverName}, ${countryName}`,
-        };
+          if (dangerLevelColumn)
+            columnValues[dangerLevelColumn] = forecast.dangerLevel;
 
-      return mondayClient.createItem(boardId, itemName, columnValues);
-    })
-  );
+          if (locationColumn)
+            columnValues[locationColumn] = {
+              lat: forecast.location.latitude,
+              lng: forecast.location.longitude,
+              address: `${forecast.riverName}, ${countryName}`,
+            };
+          const response = await mondayClient.createItem(
+            boardId,
+            itemName,
+            columnValues
+          );
 
-  items.length > 0 &&
-    (await mondayItemsLock.lockForecast(
-      boardId,
-      filteredForecasts.map((forecast) => ({
-        startTime: forecast.forecastStartTime,
-        endTime: forecast.forecastEndTime,
-        gaugeId: forecast.gaugeId,
-      }))
-    ));
-
-  logger.info("Polling by country action finished", {
-    alertsCount: filteredForecasts?.length,
-    itemsCount: items?.length,
-  });
+          newLocks.push({
+            startTime: forecast.forecastStartTime,
+            endTime: forecast.forecastEndTime,
+            gaugeId: forecast.gaugeId,
+          });
+          return response;
+        })
+      );
+    }
+  } catch (error) {
+    throw error;
+  } finally {
+    newLocks.length > 0 &&
+      (await mondayItemsLock.lockForecast(boardId, newLocks));
+      
+    logger.info("Polling by country action finished", {
+      alertsCount: filteredForecasts?.length,
+      itemsCount: newLocks?.length,
+    });
+  }
 
   res.end();
 };

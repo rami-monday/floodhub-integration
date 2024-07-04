@@ -5,8 +5,7 @@
   "license": "MIT",
   "scripts": {
     "start": "ts-node index.ts",
-    "dev": "nodemon --exec ts-node --files index.ts",
-    "gcp-build": "cd client && yarn build && cd .."
+    "dev": "nodemon --exec ts-node --files index.ts"
   },
   "devDependencies": {
     "@types/cls-hooked": "^4.3.8",

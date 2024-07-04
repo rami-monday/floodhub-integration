@@ -41,7 +41,7 @@ export type ForecastTimedValue = {
 };
 
 export type Forecast = {
-  forecastPoints: ForecastTimedValue[];
+  forecastRanges: ForecastTimedValue[];
   issuedTime: string;
 };
 

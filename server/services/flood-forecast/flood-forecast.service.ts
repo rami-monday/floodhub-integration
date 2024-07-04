@@ -48,7 +48,7 @@ export const getEnrichedForecasts = (
       const { river, location } = gauge;
       const { thresholds } = gaugeModel;
       forecastSet.forecasts.forEach((forecast) => {
-        forecast.forecastPoints.forEach((forecastPoint) => {
+        forecast.forecastRanges.forEach((forecastPoint) => {
           const enrichedForecast: EnrichedForecast = {
             countryCode: country,
             dangerLevel: getDangerLevel(forecastPoint.value, thresholds),

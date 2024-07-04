@@ -6,8 +6,7 @@ function App() {
       <iframe
         width={"100%"}
         height={"100%"}
-        src="https://sites.research.google/floods/l/0/0/3"
-        title="flood-hub"
+        src={`https://sites.research.google/floods/l/0/0/3?origin=${window.location.origin}`}
       />
     </Flex>
   );

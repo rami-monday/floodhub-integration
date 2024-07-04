@@ -25,7 +25,7 @@ export const getForecastsWithNearestRelevantStartDate = (
         })
         .slice(0, 1)
         .map((forecast) => {
-          let forecastPoints = forecast.forecastPoints.filter(
+          let forecastRanges = forecast.forecastRanges.filter(
             (forecastPoint) =>
               new Date(forecastPoint.forecastStartTime) > new Date()
           );
@@ -34,7 +34,7 @@ export const getForecastsWithNearestRelevantStartDate = (
             throw new Error(`Gauge model not found for gaugeId: ${gaugeId}`);
           }
 
-          forecastPoints = forecastPoints.filter(
+          forecastRanges = forecastRanges.filter(
             (fp) =>
               fp.value >=
               (gaugeModel.thresholds[condition] === 0
@@ -42,17 +42,18 @@ export const getForecastsWithNearestRelevantStartDate = (
                 : gaugeModel.thresholds[condition])
           );
 
-          forecastPoints = forecastPoints.sort((a, b) => {
+          forecastRanges = forecastRanges.sort((a, b) => {
             return (
               new Date(a.forecastStartTime).getTime() -
               new Date(b.forecastStartTime).getTime()
             );
           });
 
-          forecastPoints = forecastPoints.slice(0, 1);
+          forecastRanges = forecastRanges.slice(0, 1);
           return {
             ...forecast,
-            forecastPoints,
+            forecastPoints: forecastRanges,
+            forecastRanges,
           };
         }),
     };

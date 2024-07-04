@@ -75,7 +75,7 @@ class GoogleClient {
   }): Promise<{ gauges: Gauge[] }> {
     const { filter } = options;
     // Call google API
-    return this.fetch("v1/gauges:search", {
+    return this.fetch("v1/gauges:searchGaugesByArea", {
       method: HttpMethod.POST,
       body: {
         regionCode: filter.countryCode,
